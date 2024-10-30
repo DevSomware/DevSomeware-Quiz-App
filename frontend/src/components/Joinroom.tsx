@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { io } from "socket.io-client";
 import { useLocation } from "react-router-dom";
 import { Toaster, toast } from "react-hot-toast";
+import Viewmcq from "./utlils/Viewmcq";
 const Joinroom = () => {
   const location = useLocation();
   const query = new URLSearchParams(location.search);
@@ -9,6 +10,14 @@ const Joinroom = () => {
   const [name,setName]=useState('');
   const [isconnected, setIsConnected] = useState(false);
   const [participants, setParticipants] = useState([]);
+  const [issFeedback,setIsFeedback]=useState(false);
+  const [isquizstarted,setIsQuizStarted]=useState(false);
+  const [quizdata,setQuizData]=useState(null);
+  const [message,setMessage]=useState("");
+  const[socketid,setSocketId]=useState('');
+  const [rating, setRating] = useState(0); // Stores the user's selected rating
+
+ 
   //web sockets connection
   //take user input func
   const takeuserInput=():string|null=>{
@@ -48,6 +57,21 @@ const Joinroom = () => {
     socket.on("alertcreated",(data)=>{
       toast.success(data.message);
     })
+    //take feedback
+    socket.on("takefeedback",(data)=>{
+      setIsFeedback(true);
+      setSocketId(data.socketid);
+      toast.success("Feedback form is open, Please rate your experience");
+      console.log("taking feedback",data);
+    
+    })
+    //quiz start
+    socket.on("quizstart",(data)=>{
+      console.log("quiz started",data);
+      setIsQuizStarted(true);
+      console.log("quiz started",data);
+      setMessage(data);
+    })
     //if user is left
     socket.on("userleft",(data)=>{ 
       setParticipants(data.data);
@@ -67,13 +91,21 @@ const Joinroom = () => {
     }
     
   }, []);
+  //handling rating
+  const handleRating = (value) => {
+    console.log("rating is ",value)
+    setRating(value);
+    socket.emit("rating",{room:roomcode,rating:value,socketid:socketid});
+    toast.success("Thank you for your feedback");
+  };
   console.log("roomcode is ",roomcode,"isconnected is ",isconnected,"name is ",name)
  console.log("name is ",name)
+
   return (
     <>
       <div className="min-h-screen flex justify-center items-center ">
         <Toaster position="top-right" />
-        <div className="font-bold">
+        {!issFeedback&&!isquizstarted&&<div className="font-bold">
           Quiz started soon....
           <p className="mt-6">
             Joining room code is{" "}
@@ -85,7 +117,29 @@ const Joinroom = () => {
             </p>
           )}
           {isconnected && <p className="mt-4">You are connected..</p>}
-        </div>
+        </div>}
+        {issFeedback&&!isquizstarted&&<div>
+          <div className="max-w-sm mx-auto p-6 bg-white rounded-lg shadow-lg">
+      <h2 className="text-xl font-semibold mb-4 text-gray-800">Rate Your Experience. How was the quiz ?</h2>
+      <div className="flex justify-center items-center space-x-2">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            onClick={() => handleRating(star)}
+            className={`text-3xl ${
+              star <= rating ? 'text-yellow-400' : 'text-gray-300'
+            }`}
+          >
+            ★
+          </button>
+        ))}
+      </div>
+      <p className="text-center mt-4 text-gray-600">
+        {rating > 0 ? `You rated this ${rating} out of 5` : 'Please select a rating'}
+      </p>
+    </div>
+          </div>}
+          {isquizstarted&&!issFeedback&&<div><Viewmcq quizdata={quizdata}/></div>}
       </div>
       <div className="absolute right-0 top-0 bg-blue-200 h-full w-72 max-h-[100vh] overflow-y-scroll mt-2 scroll-smooth">
         <h1 className="font-bold text-2xl  bg-blue-600 text-white sticky top-0 ">

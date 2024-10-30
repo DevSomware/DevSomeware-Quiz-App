@@ -10,6 +10,7 @@ const websocket = (httpserver) => {
         },
     });
     var arr = {};
+    var feedbackarr = [];
     io.on("connection", (socket) => {
         console.log("connected to server" + socket.id);
         socket.on("disconnect", (data) => {
@@ -58,6 +59,50 @@ const websocket = (httpserver) => {
         socket.on("createalert", (data) => {
             console.log("creating alert", data);
             io.to(data.room).emit("alertcreated", { message: data.message });
+        });
+        //take feedback
+        socket.on("createfeedback", (data) => {
+            console.log("taking feedback", data);
+            let roomfeedback = feedbackarr.find((f) => f.room == data.room);
+            if (!roomfeedback) {
+                let temparr = {
+                    totalcount: 0,
+                    room: data.room,
+                    ratings: [
+                        { rating: 1, percentage: 0, count: 0 },
+                        { rating: 2, percentage: 0, count: 0 },
+                        { rating: 3, percentage: 0, count: 0 },
+                        { rating: 4, percentage: 0, count: 0 },
+                        { rating: 5, percentage: 0, count: 0 }
+                    ]
+                };
+                feedbackarr.push(temparr);
+            }
+            console.log("feedbackarr", feedbackarr);
+            let roomdata = feedbackarr.find((f) => f.room == data.room);
+            io.to(data.room).emit("takefeedback", { type: "feedback", socketid: data.socketid });
+            //sendingfeedback to admin
+            io.to(data.socketid).emit("feedbackratings", roomdata.ratings);
+        });
+        //rating socket
+        socket.on("rating", (data) => {
+            console.log("rating", data);
+            let roomfeedback = feedbackarr.find((f) => f.room == data.room);
+            if (roomfeedback) {
+                roomfeedback.totalcount += 1;
+                roomfeedback.ratings[data.rating - 1].count += 1;
+                roomfeedback.ratings.map((rate) => {
+                    rate.percentage = (rate.count / roomfeedback.totalcount) * 100;
+                });
+            }
+            console.log("feedbackarr", feedbackarr);
+            console.log("socketid", data.socketid);
+            io.to(data.socketid).emit("feedbackratings", roomfeedback.ratings);
+        });
+        //quiz started 
+        socket.on("quizstarted", (data) => {
+            console.log("quiz started", data);
+            io.to(data.room).emit("quizstart", data.message);
         });
     });
 };

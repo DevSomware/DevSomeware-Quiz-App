@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import './App.css'
 import { io } from "socket.io-client";
 import { Toaster,toast } from 'react-hot-toast';
+import TakeFeedBackComponent from './components/utlils/TakeFeedBack';
+import QuizCreator from './components/utlils/CreateQuiz';
 function App() {
   const router =useNavigate();
  const [isshowromm,setIsShowRoom]=useState(false);
@@ -11,6 +13,8 @@ function App() {
  const [compname,setCompName]=useState('');
  const [socketid,setsocketid]=useState('');
  const [usermessage,setUserMessage]=useState([]);
+ const [ratings,setRatings]=useState([]);
+
 const socket = useMemo(() => io('http://localhost:3000'), [{}])
 useEffect(()=>{
 socket.on('connect',()=>{
@@ -21,6 +25,10 @@ socket.on('connect',()=>{
 socket.on('usermessage',(data)=>{
   //@ts-ignore
   setUserMessage((prevMessages) => [...prevMessages,{name:data.name,answer:data.answer}]);
+})
+socket.on('feedbackratings',(data)=>{
+  console.log('feedback ratings',data);
+  setRatings(data);
 })
 },[])
 const handleJoinRoom=()=>{
@@ -48,6 +56,12 @@ const handleCreateAlert = ()=>{
   setShowAdminContent(true);
   setCompName('Alert');
 }
+//handle add quiz
+const handleAddQuiz = ()=>{
+  setShowAdminContent(true);
+  setCompName('QuizCreator');
+  socket.emit('quizstarted',{room:roomcode,message:'Quiz Started! Questions will be displayed soon!'});
+}
 
 //admin area
 const CreateUserInput=(question:string)=>{
@@ -57,7 +71,20 @@ toast.success('User input created successfully');
 //create alert;
 const CreateAlert=(message:string)=>{
 socket.emit('createalert',{room:roomcode,message:message});
+toast.success('Alert created successfully');
 }
+//take feedback
+const handleTakeFeedBack=()=>{
+  setShowAdminContent(true);
+  setCompName('TakeFeedBack');
+ socket.emit('createfeedback',{room:roomcode,socketid:socketid});
+
+}
+ //handle send quiz
+ const SendQuiz=(data)=>{
+socket.emit('sendquiz',{room:roomcode,quiz:data});
+toast.success('Quiz sent successfully');
+ }
   return (
     <div className=' flex justify-center items-center'>
       <Toaster position='top-right'/>
@@ -81,10 +108,10 @@ socket.emit('createalert',{room:roomcode,message:message});
         <button className='bg-blue-600 text-white p-2 m-2 rounded w-80 hover:bg-blue-800' onClick={handleCreateAlert}>
           Display a Alert
         </button>
-        <button className='bg-blue-600 text-white p-2 m-2 rounded w-80 hover:bg-blue-800' onClick={handleUserInput}>
+        <button className='bg-blue-600 text-white p-2 m-2 rounded w-80 hover:bg-blue-800' onClick={handleAddQuiz}>
           Start the Quiz
         </button>
-        <button className='bg-blue-600 text-white p-2 m-2 rounded w-80 hover:bg-blue-800' onClick={handleUserInput}>
+        <button className='bg-blue-600 text-white p-2 m-2 rounded w-80 hover:bg-blue-800' onClick={handleTakeFeedBack}>
          Take FeedBack
         </button>
         </div>}
@@ -98,6 +125,8 @@ socket.emit('createalert',{room:roomcode,message:message});
         {isshowromm&&showadminContent&&<div>
          {compname==='TakeUserInput'&&<TakeUserInput func={CreateUserInput} usermessage={usermessage}/>}
          {compname==='Alert'&&<Alert func={CreateAlert}/>}
+         {compname==='TakeFeedBack'&&<TakeFeedBackComponent ratings={ratings}/>}
+          {compname==='QuizCreator'&&<QuizCreator SendQuiz={SendQuiz}/>}
         </div>}
        </div>
        
@@ -154,4 +183,5 @@ setQuestion(e.target.value);
     </div>
   )
 }
+
 
