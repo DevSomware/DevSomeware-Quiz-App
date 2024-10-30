@@ -12,28 +12,25 @@ socket.on('connect',()=>{
 })
 },[])
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+    <div className=' flex justify-center items-center'>
+      <div className='h-[70vh] w-[80vw] shadow-2xl border-2 rounded-md bg-blue-200'>
+       
+        <h1 className='text-3xl text-center font-bold mt-2 text-green-600'>Quiz - Create or join on your room.</h1>
+       <div className='grid grid-cols-2 mt-20 ml-2 mr-2'>
+       <div className='bg-white flex flex-col h-80 rounded shadow-lg justify-center items-center'>
+       <button className='bg-blue-600 text-white p-2 m-2 rounded w-80 hover:bg-blue-800'>
+          Create Room
         </button>
-        <p className='bg-red-500'>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+        <button className='bg-blue-600 text-white p-2 m-2 rounded mt-10 w-80 hover:bg-blue-800'>
+          Join Room
+        </button>
+       </div>
+       <div className='w-full h-80'>
+        <img src="https://www.dragnsurvey.com/blog/en/wp-content/webp-express/webp-images/uploads/2024/02/quiz-line-computer.jpg.webp" alt="" className='h-80 w-full'/>
+       </div>
+       </div>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </div>
   )
 }
 
