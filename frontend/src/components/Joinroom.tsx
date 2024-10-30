@@ -30,6 +30,9 @@ const Joinroom = () => {
     });
 
     socket.on("participants", (data) => {
+        const length:number = data.length;
+        const lastuser = data[length-1];
+        toast.success(lastuser+" Joined the Room")
         setParticipants(data);
     })
     
@@ -38,7 +41,7 @@ const Joinroom = () => {
   return (
     <>
       <div className="min-h-screen flex justify-center items-center ">
-        <Toaster position="top-left" />
+        <Toaster position="top-right" />
         <div className="font-bold">
           Quiz started soon....
           <p className="mt-6">
