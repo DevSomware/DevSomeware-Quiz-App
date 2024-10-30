@@ -44,6 +44,10 @@ const Joinroom = () => {
       let a = prompt(data.question);
       socket.emit("sendtoadmin",{room:roomcode,answer:a,socketid:data.socketid,name:localStorage.getItem("name")});
     })
+    //alert created
+    socket.on("alertcreated",(data)=>{
+      toast.success(data.message);
+    })
     //if user is left
     socket.on("userleft",(data)=>{ 
       setParticipants(data.data);

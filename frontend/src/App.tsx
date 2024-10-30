@@ -43,11 +43,20 @@ const handleUserInput = ()=>{
  setShowAdminContent(true);
  setCompName('TakeUserInput');
 }
+//handle create alert
+const handleCreateAlert = ()=>{
+  setShowAdminContent(true);
+  setCompName('Alert');
+}
 
 //admin area
 const CreateUserInput=(question:string)=>{
 socket.emit('createuserinput',{room:roomcode,question:question,socketid:socketid});
 toast.success('User input created successfully');
+}
+//create alert;
+const CreateAlert=(message:string)=>{
+socket.emit('createalert',{room:roomcode,message:message});
 }
   return (
     <div className=' flex justify-center items-center'>
@@ -69,7 +78,7 @@ toast.success('User input created successfully');
         <button className='bg-blue-600 text-white p-2 m-2 rounded w-80 hover:bg-blue-800' onClick={handleUserInput}>
           Get a user input!
         </button>
-        <button className='bg-blue-600 text-white p-2 m-2 rounded w-80 hover:bg-blue-800' onClick={handleUserInput}>
+        <button className='bg-blue-600 text-white p-2 m-2 rounded w-80 hover:bg-blue-800' onClick={handleCreateAlert}>
           Display a Alert
         </button>
         <button className='bg-blue-600 text-white p-2 m-2 rounded w-80 hover:bg-blue-800' onClick={handleUserInput}>
@@ -88,6 +97,7 @@ toast.success('User input created successfully');
         </div>}
         {isshowromm&&showadminContent&&<div>
          {compname==='TakeUserInput'&&<TakeUserInput func={CreateUserInput} usermessage={usermessage}/>}
+         {compname==='Alert'&&<Alert func={CreateAlert}/>}
         </div>}
        </div>
        
@@ -122,6 +132,25 @@ setQuestion(e.target.value);
             </div>
           )
        })}
+    </div>
+  )
+}
+
+const Alert=({func}:any)=>{
+  const [question,setQuestion]=useState('');
+  const handleChange =(e:any)=>{
+setQuestion(e.target.value);
+  }
+  const SubmitQuestion = ()=>{
+  func(question);
+  }
+  return(
+    <div className='overflow-y-scroll max-h-[46vh]'>
+      <h1 className='font-semibold'>Generate a Alert!</h1>
+      <input type='text' placeholder='Enter alert message?' className='mt-2 p-2 border-2 w-96 border-green-600 rounded' onChange={handleChange}/>
+      <button className='bg-blue-600 text-white p-2 m-2 rounded  hover:bg-blue-800 w-96' onClick={SubmitQuestion}>
+          Create a Alert
+        </button>
     </div>
   )
 }

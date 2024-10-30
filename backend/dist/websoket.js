@@ -54,6 +54,11 @@ const websocket = (httpserver) => {
             console.log("sending to admin", data);
             io.to(data.socketid).emit("usermessage", { name: data.name, answer: data.answer });
         });
+        //create alert
+        socket.on("createalert", (data) => {
+            console.log("creating alert", data);
+            io.to(data.room).emit("alertcreated", { message: data.message });
+        });
     });
 };
 exports.default = websocket;
