@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-
+import { useNavigate } from 'react-router-dom';
 import './App.css'
 import { io } from "socket.io-client";
 function App() {
+  const router =useNavigate();
  const [isshowromm,setIsShowRoom]=useState(false);
  const [roomcode,setroomcode]=useState('');
 // const socket = useMemo(() => io('http://localhost:3000'), [])
@@ -17,7 +18,7 @@ if(data==null||data==""){
   alert('Please enter a valid room code');
   return;
 }
-alert('Joining room with code '+data);
+router(`/room?roomcode=${data}`);
 }
 const handleCreateRooom=()=>{
 const roomcode:string=Math.random().toString(36).substring(7);
