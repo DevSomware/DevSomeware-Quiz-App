@@ -38,6 +38,22 @@ const websocket = (httpserver) => {
             arr[data.room].push(data.user);
             io.to(data.room).emit("participants", arr[data.room]);
         });
+        //remove user from room
+        socket.on("removeuser", (data) => {
+            console.log("removing user", data);
+            arr[data.room] = arr[data.room].filter((user) => user != data.user);
+            socket.to(data.room).emit("userleft", { data: arr[data.room], user: data.user });
+        });
+        //create user input
+        socket.on("createuserinput", (data) => {
+            console.log("creating user input", data);
+            io.to(data.room).emit("userinputcreated", { question: data.question, socketid: data.socketid });
+        });
+        //sending usermessage to admin
+        socket.on("sendtoadmin", (data) => {
+            console.log("sending to admin", data);
+            io.to(data.socketid).emit("usermessage", { name: data.name, answer: data.answer });
+        });
     });
 };
 exports.default = websocket;

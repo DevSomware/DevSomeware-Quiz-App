@@ -17,15 +17,18 @@ const Joinroom = () => {
         p="Anonymous";
     }
     setName(p);
+    localStorage.setItem("name",p);
     return p;
  }
   const socket = useMemo(() => io("http://localhost:3000"), []);
   useEffect(() => {
     socket.on("connect", () => {
+      let result:string|null = "";
       setIsConnected(true);
       socket.emit("joinroom", { room: roomcode });
        //taking user input
-       const result =takeuserInput();
+       result = takeuserInput();
+       setName(result);
        socket.emit("adduser",{room:roomcode,user:result});
     });
 
@@ -35,9 +38,33 @@ const Joinroom = () => {
         toast.success(lastuser+" Joined the Room")
         setParticipants(data);
     })
+    //if questions asked
+    socket.on("userinputcreated",(data)=>{
+     console.log("user input created",data);
+      let a = prompt(data.question);
+      socket.emit("sendtoadmin",{room:roomcode,answer:a,socketid:data.socketid,name:localStorage.getItem("name")});
+    })
+    //if user is left
+    socket.on("userleft",(data)=>{ 
+      setParticipants(data.data);
+      toast.error(data.user+" left the room");
+    })
+    //handletabclose
+    const handleBeforeunload=()=>{
+      socket.emit("removeuser",{room:roomcode,user:localStorage.getItem("name")});
+      socket.disconnect();
+    }
+    //event listener
+    window.addEventListener("beforeunload",handleBeforeunload);
+    return ()=>{
+      socket.emit("removeuser",{room:roomcode,user:localStorage.getItem("name")});
+      socket.disconnect();
+      window.addEventListener("beforeunload",handleBeforeunload);
+    }
     
   }, []);
- 
+  console.log("roomcode is ",roomcode,"isconnected is ",isconnected,"name is ",name)
+ console.log("name is ",name)
   return (
     <>
       <div className="min-h-screen flex justify-center items-center ">
