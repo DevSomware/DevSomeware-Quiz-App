@@ -15,7 +15,7 @@ const Leaderboard = ({leaderboard}:any) => {
           </tr>
         </thead>
         <tbody>
-          {leaderboard&&leaderboard.map((user, index) => (
+          {leaderboard&&leaderboard.map((user:any, index:number) => (
             <tr key={index} className="border-b hover:bg-gray-100">
               <td className="p-2">{index + 1}</td>
               <td className="p-2">{user.name}</td>

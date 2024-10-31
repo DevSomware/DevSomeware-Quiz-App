@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/joinroom.tsx","./src/components/utlils/createquiz.tsx","./src/components/utlils/leaderboard.tsx","./src/components/utlils/takefeedback.tsx","./src/components/utlils/viewmcq.tsx"],"errors":true,"version":"5.6.3"}

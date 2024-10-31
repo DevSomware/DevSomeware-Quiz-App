@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-function Quiz({quizdata,message,isanswerPublish,setIsAnswerPublish,isitnew,handleVote}:any) {
+function Quiz({quizdata,isanswerPublish,setIsAnswerPublish,isitnew,handleVote}:any) {
   const [selectedOption, setSelectedOption] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -34,7 +34,7 @@ setIsUserSubmitted(false);
     }
   }, [timeLeft]);
 
-  const handleOptionChange = (optionId) => {
+  const handleOptionChange = (optionId:any) => {
     setSelectedOption(optionId);
     setError("");
   };
@@ -48,7 +48,7 @@ setIsUserSubmitted(false);
     handleVote(selectedOption,timeLeft);
   };
 
-  const correctOption = quizdata&&options.find((option) => option.id === quizdata.correctOption);
+  const correctOption = quizdata&&options.find((option:any) => option.id === quizdata.correctOption);
 
   return (
     <>
@@ -62,7 +62,7 @@ setIsUserSubmitted(false);
         <p className="text-gray-600 mb-4">Time left: {timeLeft} seconds</p>
 
         <div className="space-y-2">
-          {options.map((option) => (
+          {options.map((option:any) => (
             <div key={option.id} className="flex flex-col">
               <label
                 className={`block p-3 border rounded-lg cursor-pointer ${
