@@ -5,6 +5,7 @@ import { io } from "socket.io-client";
 import { Toaster,toast } from 'react-hot-toast';
 import TakeFeedBackComponent from './components/utlils/TakeFeedBack';
 import QuizCreator from './components/utlils/CreateQuiz';
+import Leaderboard from './components/utlils/LeaderBoard';
 function App() {
   const router =useNavigate();
  const [isshowromm,setIsShowRoom]=useState(false);
@@ -14,7 +15,9 @@ function App() {
  const [socketid,setsocketid]=useState('');
  const [usermessage,setUserMessage]=useState([]);
  const [ratings,setRatings]=useState([]);
-
+ const [quizarr,setQuizArr]=useState([]);
+ const [showleaderboard,setShowLeaderBoard]=useState(false);
+ const [leaderboard,setLeaderBoard]=useState([]);
 const socket = useMemo(() => io('http://localhost:3000'), [{}])
 useEffect(()=>{
 socket.on('connect',()=>{
@@ -29,6 +32,18 @@ socket.on('usermessage',(data)=>{
 socket.on('feedbackratings',(data)=>{
   console.log('feedback ratings',data);
   setRatings(data);
+})
+//getupdated quiz ratings
+socket.on('getquiz',(data)=>{
+setQuizArr(data.quiz);
+console.log('quiz data',data.quiz);
+console.log("quiz increases");
+})
+//show leader board
+socket.on('showleaderboard',(data)=>{
+  console.log('show leader board',data);
+  setLeaderBoard(data.data);
+  setShowLeaderBoard(true);
 })
 },[])
 const handleJoinRoom=()=>{
@@ -48,16 +63,19 @@ toast.success("Room created successfully!");
 }
 //handle user input
 const handleUserInput = ()=>{
+ 
  setShowAdminContent(true);
  setCompName('TakeUserInput');
 }
 //handle create alert
 const handleCreateAlert = ()=>{
+  
   setShowAdminContent(true);
   setCompName('Alert');
 }
 //handle add quiz
 const handleAddQuiz = ()=>{
+  setShowLeaderBoard(false);
   setShowAdminContent(true);
   setCompName('QuizCreator');
   socket.emit('quizstarted',{room:roomcode,message:'Quiz Started! Questions will be displayed soon!'});
@@ -82,9 +100,45 @@ const handleTakeFeedBack=()=>{
 }
  //handle send quiz
  const SendQuiz=(data)=>{
-socket.emit('sendquiz',{room:roomcode,quiz:data});
+  setShowLeaderBoard(false);
+console.log("quiz data",data);
+
+let sn = data.options.map((item)=>{
+  return {text:item.text,percentage:0,totalcount:0,id:item.id}
+})
+data.options=sn;
+socket.emit('sendquiz',{room:roomcode,quiz:data,socketid:socketid});
 toast.success('Quiz sent successfully');
  }
+ //send result
+  const SendResult=()=>{
+    socket.emit('publishanswer',{room:roomcode,socketid:socketid});
+    toast.success('Result sent successfully');
+  }
+  //show leader board
+  const ShowLeaderBoard=()=>{
+    socket.emit('showleaderboard',{room:roomcode,socketid:socketid});
+    toast.success('Leaderboard sent successfully');
+  }
+  //handleEndTest
+  const handleEndTest=()=>{
+    let a = confirm('Are you sure you want to end the test?');
+    if(!a){
+      return;
+    }
+    socket.emit('endtest',{room:roomcode});
+    setIsShowRoom(false);
+    setShowAdminContent(false);
+    setCompName('');
+    setroomcode('');
+    setsocketid('');
+    setUserMessage([]);
+    setRatings([]);
+    setQuizArr([]);
+    setShowLeaderBoard(false);
+    setLeaderBoard([]);
+    toast.success('Test Ended successfully');
+  }
   return (
     <div className=' flex justify-center items-center'>
       <Toaster position='top-right'/>
@@ -114,6 +168,10 @@ toast.success('Quiz sent successfully');
         <button className='bg-blue-600 text-white p-2 m-2 rounded w-80 hover:bg-blue-800' onClick={handleTakeFeedBack}>
          Take FeedBack
         </button>
+        <button className='bg-red-600 text-white p-2 m-2 rounded w-80 hover:bg-red-800' onClick={handleEndTest}>
+         End Test
+        </button>
+        {showleaderboard&&<Leaderboard leaderboard={leaderboard}/>}
         </div>}
        <div className='w-full h-80 bg-white'>
         {!isshowromm&&<img src="https://www.dragnsurvey.com/blog/en/wp-content/webp-express/webp-images/uploads/2024/02/quiz-line-computer.jpg.webp" alt="" className='h-80 w-full'/>}
@@ -126,7 +184,7 @@ toast.success('Quiz sent successfully');
          {compname==='TakeUserInput'&&<TakeUserInput func={CreateUserInput} usermessage={usermessage}/>}
          {compname==='Alert'&&<Alert func={CreateAlert}/>}
          {compname==='TakeFeedBack'&&<TakeFeedBackComponent ratings={ratings}/>}
-          {compname==='QuizCreator'&&<QuizCreator SendQuiz={SendQuiz}/>}
+          {compname==='QuizCreator'&&<QuizCreator SendQuiz={SendQuiz} SendResult={SendResult} quizarr={quizarr} ShowLeaderBoard={ShowLeaderBoard} />}
         </div>}
        </div>
        

@@ -10,6 +10,8 @@ const websocket =(httpserver:any)=>{
     })
     var arr:any={};
     var feedbackarr:any=[];
+    var quizarr:any=[];
+    var leaderboard:any=[];
     io.on("connection",(socket)=>{
         console.log("connected to server"+socket.id);
         socket.on("disconnect",(data)=>{
@@ -104,9 +106,95 @@ const websocket =(httpserver:any)=>{
         console.log("quiz started",data);
         io.to(data.room).emit("quizstart",data.message);
     })
+    //send quiz
+    socket.on("sendquiz",(data)=>{
+        console.log("sending quiz",data);
+    let findquiz = quizarr.find((q:any)=>q.room==data.room);
+    if(!findquiz){
+        let tempquizarr = {
+            room: data.room,
+            questions: data.quiz.question,
+            options: data.quiz.options,
+            correctOption: data.quiz.correctOptionId,
+            totalvote:0,
+        }
+        quizarr.push(tempquizarr);
+        //make a leader board for this perticular quiz
+    }
+     else{
+            findquiz.questions = data.quiz.question;
+            findquiz.options = data.quiz.options;
+            findquiz.correctOption = data.quiz.correctOptionId;
+            findquiz.totalvote = 0;
+     }
+     let findleaderboard = leaderboard.find((l:any)=>l.room==data.room);
+        if(!findleaderboard){
+            let temparr = {
+                room: data.room,
+                leaderboard: [],
+                correctOption:data.quiz.correctOptionId
+            }
+            leaderboard.push(temparr);
+        }
+        else{
+            findleaderboard.leaderboard=[];
+            findleaderboard.correctOption=data.quiz.correctOptionId;
+        }
+     console.log("quizarr",quizarr);
+     let roomquiz = quizarr.find((q:any)=>q.room==data.room);
+        io.to(data.room).emit("getquiz",{quiz:roomquiz,socketid:data.socketid,new:true});
+    }) 
+    //publish answer
+    socket.on("publishanswer",(data)=>{
+        console.log("publish answer",data);
+        io.to(data.room).emit("publishanswer",{socketid:data.socketid,ispublish:true});               
+    })
+    //calculate percentage and update vote
+    socket.on("vote",(data)=>{
+        console.log("vote",data);
+        //add in laeader board
+        let findleaderboard = leaderboard.find((l:any)=>l.room==data.room);
+        if(findleaderboard){
+            let ldata = {name:data.name,option:data.option,time:data.time}
+            findleaderboard.leaderboard.push(ldata);
+        }
+        //printing leader board on a every request
+        console.log("finalleader board is",findleaderboard);
+        console.log("leader board is",leaderboard);
+        let findquiz = quizarr.find((q:any)=>q.room==data.room);
+        if(findquiz){
+            findquiz.totalvote+=1;
+            findquiz.options.map((option:any)=>{
+                if(option.id==data.option){
+                    option.totalcount+=1;
+                }
+            })
+            findquiz.options.map((option:any)=>{
+                option.percentage = (option.totalcount/findquiz.totalvote)*100;
+            })
+        }
+        console.log("quizarr",quizarr);
+        io.to(data.room).emit("getquiz",{quiz:findquiz,socketid:data.socketid,new:false});
+        //sends to admin
+        io.to(data.socketid).emit("getquiz",{quiz:findquiz,socketid:data.socketid,new:false});
+    }) 
+    //show leader board
+    socket.on("showleaderboard",(data)=>{
+        let findleaderboard = leaderboard.find((l:any)=>l.room==data.room);
+        let filtercorrect = findleaderboard.leaderboard.filter((l:any)=>l.option==findleaderboard.correctOption);
         
-        
-        
+        filtercorrect.sort((a:any,b:any)=>a.time-b.time);
+        console.log("filterlederboarddatais",filtercorrect);
+
+       io.to(data.room).emit("showleaderboard",{socketid:data.socketid,data:filtercorrect});
+       io.to(data.socketid).emit("showleaderboard",{socketid:data.socketid,data:filtercorrect});
+    })
+    //endtest socket
+    socket.on("endtest",(data)=>{
+        console.log("endtest",data);
+        io.to(data.room).emit("endtest",{socketid:data.socketid});
+    })
+
     }) 
 }
 export default websocket

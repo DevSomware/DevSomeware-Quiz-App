@@ -1,17 +1,19 @@
 import { useState ,useEffect} from "react";
 import toast from "react-hot-toast";
 
-function QuizCreator({SendQuiz}:any) {
+function QuizCreator({SendQuiz,SendResult,quizarr,ShowLeaderBoard}:any) {
   const [questions, setQuestions] = useState([]);
   const [questionText, setQuestionText] = useState("");
-  const [options, setOptions] = useState([{ id: 1, text: "", percentage: 0 }]);
+  const [options, setOptions] = useState([{ id: 1, text: "", percentage: 0,totalcount:0 }]);
   const [correctOption, setCorrectOption] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isbtnvisible,setIsBtnVisible]=useState(true);
   const [currentQuestion, setCurrentQuestion] = useState("");
+  const [disabledbutton,setDisabledButton]=useState(false);
+//useefefct for updating percentage
 
   const addOption = () => {
-    setOptions([...options, { id: options.length + 1, text: "", percentage: 0 }]);
+    setOptions([...options, { id: options.length + 1, text: "", percentage: 0 ,totalcount:0}]);
   };
 
   const handleOptionChange = (id, value) => {
@@ -45,23 +47,60 @@ function QuizCreator({SendQuiz}:any) {
   };
 console.log(questions);
   // Automatically countdown the timer
-//handle send quiz 
-useEffect(() => {
-    if (timeLeft > 0) {
-      const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-      return () => clearInterval(timer); // cleanup to prevent multiple intervals
-    } else {
-      setIsBtnVisible(false);
+  useEffect(() => {
+    let timer;
+    if (!isbtnvisible) {
+      timer = setInterval(() => {
+        setDisabledButton(true);
+        setTimeLeft((prevTimeLeft) => prevTimeLeft - 1);
+      }, 1000);
     }
-  }, [timeLeft]); // run the effect whenever timeLeft changes
+
+    // Clear interval when timeLeft reaches zero
+    if (timeLeft === 0) {
+      clearInterval(timer);
+     setIsBtnVisible(true)
+      setDisabledButton(false);
+      setTimeLeft(10); // Reset the timer
+    }
+
+    return () => clearInterval(timer);
+  }, [isbtnvisible, timeLeft]);
+//handle send quiz 
 
   const handleSendQuiz = (item) => {
+    console.log("quiz send")
     SendQuiz(item);
     setCurrentQuestion(item.question);
-    setTimeLeft(10); // reset the timer if needed for a new quiz question
+    setIsBtnVisible(false);
+    setTimeLeft(10);
     toast.success("Quiz sent successfully!");
   };
-
+  useEffect(() => {
+    console.log("inside use effect");
+  
+    // Find the index of the question in the current questions array
+    const index = questions.findIndex((q) => q.question === quizarr.questions);
+    
+    if (index !== -1) {
+      // Create a copy of the current questions array
+      let temp = [...questions];
+      
+      // Update the specific question's options
+      temp[index] = {
+        ...temp[index], // Keep existing fields
+        options: quizarr.options // Update the options field
+      };
+      
+      // Update the state with the modified array
+      setQuestions(temp);
+      
+      console.log("questions", questions); // This will log the old state
+      console.log("temp", temp); // This will log the updated state
+    }
+  }, [quizarr]);
+  
+console.log(questions);
   return (
     <div className="flex flex-col items-center p-6 bg-gray-100 min-h-screen">
       <h2 className="text-2xl font-semibold mb-4">Create a New Quiz Question</h2>
@@ -148,25 +187,34 @@ useEffect(() => {
               </div>
             
             ))}
-          <button
+          {<button
            
            className="w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold"
           onClick={()=>handleSendQuiz(item)}
           disabled={!isbtnvisible}
          >
           Send Quiz
-         </button>
+         </button>}
+         {/* {item.question==currentQuestion&&<button
+           
+           className="w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold"
+
+         >
+          Already Sended
+         </button>} */}
          <button
            
-           className="w-full mt-4 bg-indigo-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold"
-          
+           className="w-full mt-4 bg-indigo-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold disabled:bg-blue-300"
+          onClick={SendResult}
+          disabled={disabledbutton}
          >
            Publish Result
          </button>
          <button
            
-           className="w-full mt-4 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg font-semibold"
-          
+           className="w-full mt-4 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg font-semibold disabled:bg-green-300"
+           onClick={ShowLeaderBoard}
+           disabled={disabledbutton}
          >
            PublishLeader Board
          </button>
