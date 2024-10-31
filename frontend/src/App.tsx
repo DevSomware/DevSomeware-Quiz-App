@@ -6,6 +6,7 @@ import { Toaster,toast } from 'react-hot-toast';
 import TakeFeedBackComponent from './components/utlils/TakeFeedBack';
 import QuizCreator from './components/utlils/CreateQuiz';
 import Leaderboard from './components/utlils/LeaderBoard';
+import { FaRegCopy } from "react-icons/fa";
 function App() {
   const router =useNavigate();
  const [isshowromm,setIsShowRoom]=useState(false);
@@ -178,7 +179,15 @@ toast.success('Quiz sent successfully');
         {isshowromm&&!showadminContent&&<div className=' flex justify-center items-center text-3xl h-full shadow-2xl rounded-full'>
         Joining Room Code is <span className='bg-green-600 text-white font-bold p-4 mx-2'>{roomcode}</span>
         <br/>
-       
+        <div onClick={()=>{
+          navigator.clipboard.writeText(`${import.meta.env.VITE_URL}?roomcode=${roomcode}`);
+          toast.success('Room invite link copied successfully');
+        }}>
+          <FaRegCopy/>
+        </div>
+       <div>
+        
+       </div>
         </div>}
         {isshowromm&&showadminContent&&<div>
          {compname==='TakeUserInput'&&<TakeUserInput func={CreateUserInput} usermessage={usermessage}/>}
