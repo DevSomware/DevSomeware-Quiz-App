@@ -2,10 +2,23 @@ import { useState ,useEffect} from "react";
 import toast from "react-hot-toast";
 
 function QuizCreator({SendQuiz,SendResult,quizarr,ShowLeaderBoard}:any) {
-  const [questions, setQuestions] = useState([]);
+  interface Option {
+    id: number;
+    text: string;
+    percentage: number;
+    totalcount: number;
+  }
+
+  interface Question {
+    question: string;
+    options: Option[];
+    correctOptionId: number;
+  }
+
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [questionText, setQuestionText] = useState("");
-  const [options, setOptions] = useState([{ id: 1, text: "", percentage: 0,totalcount:0 }]);
-  const [correctOption, setCorrectOption] = useState(null);
+  const [options, setOptions] = useState<Option[]>([{ id: 1, text: "", percentage: 0, totalcount: 0 }]);
+  const [correctOption, setCorrectOption] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isbtnvisible,setIsBtnVisible]=useState(true);
   const [currentQuestion, setCurrentQuestion] = useState("");
@@ -16,14 +29,14 @@ function QuizCreator({SendQuiz,SendResult,quizarr,ShowLeaderBoard}:any) {
     setOptions([...options, { id: options.length + 1, text: "", percentage: 0 ,totalcount:0}]);
   };
 
-  const handleOptionChange = (id, value) => {
+  const handleOptionChange = (id: number, value:string) => {
     const updatedOptions = options.map((option) =>
       option.id === id ? { ...option, text: value } : option
     );
     setOptions(updatedOptions);
   };
 
-  const handleCorrectOptionChange = (id) => {
+  const handleCorrectOptionChange = (id:number) => {
     setCorrectOption(id);
   };
 
@@ -41,14 +54,14 @@ function QuizCreator({SendQuiz,SendResult,quizarr,ShowLeaderBoard}:any) {
 
     setQuestions([...questions, newQuestion]);
     setQuestionText("");
-    setOptions([{ id: 1, text: "", percentage: 0 }]);
+    setOptions([{ id: 1, text: "", percentage: 0, totalcount: 0 }]);
     setCorrectOption(null);
     
   };
 console.log(questions);
   // Automatically countdown the timer
   useEffect(() => {
-    let timer;
+    let timer: number | null = null;
     if (!isbtnvisible) {
       timer = setInterval(() => {
         setDisabledButton(true);
@@ -57,19 +70,21 @@ console.log(questions);
     }
 
     // Clear interval when timeLeft reaches zero
-    if (timeLeft === 0) {
+    if (timeLeft === 0 && timer) {
       clearInterval(timer);
      setIsBtnVisible(true)
       setDisabledButton(false);
       setTimeLeft(10); // Reset the timer
     }
 
-    return () => clearInterval(timer);
+    return () => {
+      if (timer) clearInterval(timer);
+    };
   }, [isbtnvisible, timeLeft]);
 //handle send quiz 
 
-  const handleSendQuiz = (item) => {
-    console.log("quiz send")
+  const handleSendQuiz = (item:Question) => {
+    console.log("quiz sent")
     SendQuiz(item);
     setCurrentQuestion(item.question);
     setIsBtnVisible(false);
